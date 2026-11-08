@@ -155,7 +155,7 @@ resource "aws_route_table_association" "private_2" {
 
 # IAM Role for EKS Master
 resource "aws_iam_role" "eks_master_role" {
-  name = "native-eks-master-role"
+  name = "native-eks-master-role-v2"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -181,7 +181,7 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
 # ==============================================================================
 
 resource "aws_eks_cluster" "core_cluster" {
-  name     = "production-core-cluster"
+  name     = "production-core-cluster-v2"
   role_arn = aws_iam_role.eks_master_role.arn
 
   vpc_config {
@@ -206,7 +206,7 @@ resource "aws_eks_cluster" "core_cluster" {
 
 # IAM Role for EC2 Worker Nodes
 resource "aws_iam_role" "eks_nodes_role" {
-  name = "native-eks-nodes-role"
+  name = "native-eks-nodes-role-v2"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
