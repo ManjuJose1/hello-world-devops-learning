@@ -291,5 +291,5 @@ data "aws_arn" "current_identity" {
 resource "aws_ecr_repository" "app_repo" {
   name                 = "my-custom-node-app"
   image_tag_mutability = "MUTABLE"
-  force_destroy        = true
+  force_delete        = true
 }
