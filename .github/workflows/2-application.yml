@@ -1,0 +1,63 @@
+name: 2-Application Deployment (Docker & Helm)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'app/**'
+      - 'helm/**'
+      - 'Dockerfile' # Fires ONLY when your software code or configurations change
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: production-core-cluster
+  ECR_REPO_NAME: my-custom-node-app
+  HELM_RELEASE: live-node-application
+
+jobs:
+  deploy-app:
+    name: Build, Push, and Upgrade Pods
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Pull Repository Code
+      uses: actions/checkout@v4
+
+    - name: Authenticate with AWS
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Authenticate Container Engine to ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Package and Upload Container Image
+      id: build-step
+      run: |
+        REGISTRY=${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG=${{ github.sha }}
+        
+        docker build -t $REGISTRY/${{ env.ECR_REPO_NAME }}:$IMAGE_TAG .
+        docker push $REGISTRY/${{ env.ECR_REPO_NAME }}:$IMAGE_TAG
+        
+        echo "image_url=$REGISTRY/${{ env.ECR_REPO_NAME }}" >> $GITHUB_OUTPUT
+        echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Authenticate Runner Terminal to EKS
+      run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+    - name: Setup Helm Client
+      uses: azure/setup-helm@v4
+      with:
+        version: v3.12.0
+
+    - name: Execute Live Rolling Update via Helm
+      run: |
+        helm upgrade --install ${{ env.HELM_RELEASE }} ./helm/my-app \
+          --namespace application \
+          --create-namespace \
+          --set image.repository=${{ steps.build-step.outputs.image_url }} \
+          --set image.tag=${{ steps.build-step.outputs.image_tag }}
