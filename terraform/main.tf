@@ -214,7 +214,7 @@ resource "aws_iam_role" "eks_nodes_role" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "://amazonaws.com"
+        Service = "eks.amazonaws.com"
       }
     }]
   })
