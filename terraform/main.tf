@@ -5,7 +5,7 @@ terraform {
   backend "s3" {
     bucket = "k8s-learning-s3-bucket-manju" 
     key    = "eks/production.tfstate"
-    region = "us-east-1"
+    region = "eu-north-1"
   }
 
   required_providers {
