@@ -1,0 +1,40 @@
+name: 1-Infrastructure Deployment (Terraform)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'terraform/**' # Fires ONLY when you update your infrastructure cloud code
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  terraform:
+    name: Provision AWS Cluster Hardware
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./terraform
+
+    steps:
+    - name: Pull Repository Code
+      uses: actions/checkout@v4
+
+    - name: Authenticate with AWS
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup Terraform Engine
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
+
+    - name: Initialize Backend
+      run: terraform init
+
+    - name: Apply Infrastructure Changes
+      run: terraform apply --auto-approve

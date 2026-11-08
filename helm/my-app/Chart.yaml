@@ -1,0 +1,6 @@
+apiVersion: v2
+name: my-app
+description: Packaging manifest for custom Node app deployment
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
